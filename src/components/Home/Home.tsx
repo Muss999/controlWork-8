@@ -5,9 +5,11 @@ import Spinner from "../Spinner/Spinner";
 import Quote from "../Quote/Quote";
 import "./Home.css";
 import { CATEGORIES } from "../../helpers/consts";
-import { NavLink } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import HomeCategoriesBlock from "./HomeCategoriesBlock/HomeCategoriesBlock";
 
 const Home = () => {
+    const params = useParams();
     const [quotes, setQuotes] = useState<TypeQuotesList>();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -15,8 +17,23 @@ const Home = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const { data } = await axiosApi.get("/quotes.json");
-                setQuotes(data);
+                let data: TypeQuotesList | undefined;
+                if (params.categorie) {
+                    setLoading(true);
+                    const response = await axiosApi.get(
+                        `/quotes.json?orderBy="category"&equalTo="${params.categorie}"`
+                    );
+                    data = response.data;
+                } else {
+                    setLoading(true);
+                    const response = await axiosApi.get("/quotes.json");
+                    data = response.data;
+                }
+                if (data) {
+                    setQuotes(data);
+                } else {
+                    setError(true);
+                }
             } catch {
                 setError(true);
             } finally {
@@ -24,17 +41,7 @@ const Home = () => {
             }
         };
         fetchData();
-    }, []);
-
-    if (loading) {
-        return <Spinner />;
-    }
-    if (error) {
-        return <p>Произошла ошибка</p>;
-    }
-    if (!quotes) {
-        return <p>Цитат нет</p>;
-    }
+    }, [params.categorie]);
 
     const quotesArr: TypeQuoteMutation[] = [];
     for (const quote in quotes) {
@@ -42,24 +49,33 @@ const Home = () => {
         quotesArr.push(newQuote);
     }
 
+    const currentCategorie = CATEGORIES.find(
+        (categorie) => categorie.id === params.categorie
+    );
+    const categorieTitle = currentCategorie ? currentCategorie.title : "All";
+
+    let quotesBlock = (
+        <>
+            {quotesArr.map((quote, index) => {
+                return <Quote key={`${quote.id}-${index}`} quote={quote} />;
+            })}
+        </>
+    );
+
+    if (loading) {
+        quotesBlock = <Spinner />;
+    } else if (error) {
+        quotesBlock = <p>Произошла ошибка</p>;
+    } else if (quotesArr.length === 0) {
+        quotesBlock = <p>Цитат нет</p>;
+    }
+
     return (
         <div className="Home__main-block">
-            <div className="Home__categories-block">
-                {CATEGORIES.map((categorie) => {
-                    return (
-                        <NavLink
-                            to={`/quotes/${categorie.id}`}
-                            className="Home__categorie"
-                        >
-                            {categorie.title}
-                        </NavLink>
-                    );
-                })}
-            </div>
+            <HomeCategoriesBlock />
             <div className="Home__quotes-list">
-                {quotesArr.map((quote, index) => {
-                    return <Quote key={`${quote.id}-${index}`} quote={quote} />;
-                })}
+                <h2>{categorieTitle}</h2>
+                {quotesBlock}
             </div>
         </div>
     );

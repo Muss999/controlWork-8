@@ -22,7 +22,7 @@ const Navbar = () => {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav">
                         <li className="nav-item">
-                            <NavLink to={"/"} className="nav-link">
+                            <NavLink to={"/quotes"} className="nav-link">
                                 Quotes
                             </NavLink>
                         </li>

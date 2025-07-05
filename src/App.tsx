@@ -12,6 +12,7 @@ const App = () => {
                     {["/", "/quotes"].map((path) => (
                         <Route path={path} element={<Home />} />
                     ))}
+                    <Route path={"/quotes/:categorie"} element={<Home />} />
                 </Routes>
             </div>
         </>
