@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { TypeQuoteMutation, TypeQuotesList } from "../../helpers/types";
 import axiosApi from "../../axiosApi";
 import Spinner from "../Spinner/Spinner";
@@ -14,34 +14,46 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                let data: TypeQuotesList | undefined;
-                if (params.categorie) {
-                    setLoading(true);
-                    const response = await axiosApi.get(
-                        `/quotes.json?orderBy="category"&equalTo="${params.categorie}"`
-                    );
-                    data = response.data;
-                } else {
-                    setLoading(true);
-                    const response = await axiosApi.get("/quotes.json");
-                    data = response.data;
-                }
-                if (data) {
-                    setQuotes(data);
-                } else {
-                    setError(true);
-                }
-            } catch {
-                setError(true);
-            } finally {
-                setLoading(false);
+    const fetchData = useCallback(async () => {
+        try {
+            let data: TypeQuotesList | undefined;
+            setLoading(true);
+            if (params.category) {
+                const response = await axiosApi.get(
+                    `/quotes.json?orderBy="category"&equalTo="${params.category}"`
+                );
+                data = response.data;
+            } else {
+                const response = await axiosApi.get("/quotes.json");
+                data = response.data;
             }
-        };
+            if (data) {
+                setQuotes(data);
+            } else {
+                setError(true);
+            }
+        } catch {
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    }, [params.category]);
+
+    useEffect(() => {
         fetchData();
-    }, [params.categorie]);
+    }, [fetchData]);
+
+    const deleteQuote = async (id: string) => {
+        try {
+            setLoading(true);
+            await axiosApi.delete(`/quotes/${id}.json`);
+            await fetchData();
+        } catch {
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const quotesArr: TypeQuoteMutation[] = [];
     for (const quote in quotes) {
@@ -49,15 +61,21 @@ const Home = () => {
         quotesArr.push(newQuote);
     }
 
-    const currentCategorie = CATEGORIES.find(
-        (categorie) => categorie.id === params.categorie
+    const currentCategory = CATEGORIES.find(
+        (category) => category.id === params.category
     );
-    const categorieTitle = currentCategorie ? currentCategorie.title : "All";
+    const categoryTitle = currentCategory ? currentCategory.title : "All";
 
     let quotesBlock = (
         <>
             {quotesArr.map((quote, index) => {
-                return <Quote key={`${quote.id}-${index}`} quote={quote} />;
+                return (
+                    <Quote
+                        key={`${quote.id}-${index}`}
+                        quote={quote}
+                        deleteQuote={deleteQuote}
+                    />
+                );
             })}
         </>
     );
@@ -65,16 +83,18 @@ const Home = () => {
     if (loading) {
         quotesBlock = <Spinner />;
     } else if (error) {
-        quotesBlock = <p>Произошла ошибка</p>;
+        quotesBlock = (
+            <div className="alert alert-danger">Произошла ошибка.</div>
+        );
     } else if (quotesArr.length === 0) {
-        quotesBlock = <p>Цитат нет</p>;
+        quotesBlock = <div className="alert alert-primary">Цитат нет.</div>;
     }
 
     return (
         <div className="Home__main-block">
             <HomeCategoriesBlock />
             <div className="Home__quotes-list">
-                <h2>{categorieTitle}</h2>
+                <h2>{categoryTitle}</h2>
                 {quotesBlock}
             </div>
         </div>

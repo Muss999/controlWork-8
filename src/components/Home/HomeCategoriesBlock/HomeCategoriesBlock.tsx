@@ -4,18 +4,16 @@ import "./HomeCategoriesBlock.css";
 
 const HomeCategoriesBlock = () => {
     return (
-        <div className="Home__categories-block">
-            {CATEGORIES.map((categorie, index) => {
+        <div className="HomeCategoriesBlock">
+            {CATEGORIES.map((category, index) => {
                 return (
                     <NavLink
-                        to={
-                            categorie.id ? `/quotes/${categorie.id}` : "/quotes"
-                        }
-                        end={categorie.id === ""}
-                        className="Home__categorie"
-                        key={`${categorie.id}-${index}`}
+                        to={category.id ? `/quotes/${category.id}` : "/quotes"}
+                        end={category.id === ""}
+                        className="HomeCategoriesBlock-link"
+                        key={`${category.id}-${index}`}
                     >
-                        {categorie.title}
+                        {category.title}
                     </NavLink>
                 );
             })}
