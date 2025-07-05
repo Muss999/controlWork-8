@@ -9,3 +9,6 @@ export interface TypeQuoteMutation {
     text: string;
     id: string;
 }
+export interface TypeQuotesList {
+    [id: string]: TypeQuote;
+}

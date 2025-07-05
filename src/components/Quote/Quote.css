@@ -1,0 +1,9 @@
+.Quote-card {
+    border: 1px solid black;
+    width: 100%;
+}
+.Quote__bottom {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
